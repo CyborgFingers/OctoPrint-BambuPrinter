@@ -58,6 +58,18 @@ class ImplicitTLS(ftplib.FTP_TLS):
             value = self.context.wrap_socket(value)
         self._sock = value
 
+    def makepasv(self):
+        """Open the data connection to the host the control connection is on.
+
+        The printer answers PASV with 0.0.0.0, or with an address that only means
+        something on its own subnet, so the address in the reply can't be used from
+        another subnet (issue #18). Only the port is taken from it. Python does this
+        itself from 3.9.3 (trust_server_pasv_ipv4_address); this makes it so on the
+        older Pythons too.
+        """
+        _, port = super().makepasv()
+        return self.sock.getpeername()[0], port
+
     def ntransfercmd(self, cmd, rest=None):
         conn, size = ftplib.FTP.ntransfercmd(self, cmd, rest)
 
